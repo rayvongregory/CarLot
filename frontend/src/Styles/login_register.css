@@ -1,0 +1,25 @@
+form button[type="submit"] {
+    background-color: var(--gs-accent-blue);
+    transition: background-color 0.15s linear;
+}
+
+form button[disabled][type="submit"] {
+    background-color: gray;
+    cursor: not-allowed;
+}
+
+.hero-container + div h3::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1.5px;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(
+        90deg, 
+        transparent 10%, 
+        var(--gs-orange) 15%, 
+        var(--gs-orange) 85%, 
+        transparent 90%
+    );
+}

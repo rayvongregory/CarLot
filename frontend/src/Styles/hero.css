@@ -1,0 +1,39 @@
+.hero-container::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 1500px;
+    height: 100%;
+    background-color: var(--gs-blue);
+    z-index: -2;
+}
+
+.hero-img {
+    background-image: url("../Assets/hero.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.hero-msg {
+    background-color: var(--gs-accent-blue);
+}
+
+.hero-msg::after {
+    position: absolute;
+    content: '';
+    height: 3px;
+    width: 100%;
+    max-width: 1800px;
+    left: 0;
+    top: -1.5px;
+    background: linear-gradient(
+        90deg, 
+        transparent 10%, 
+        var(--gs-orange) 15%, 
+        var(--gs-orange) 85%, 
+        transparent 90%
+    );
+}

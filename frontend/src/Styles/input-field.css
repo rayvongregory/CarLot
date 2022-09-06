@@ -1,0 +1,45 @@
+.auth-input {
+    transition: padding-right 0.15s ease-out;
+}
+
+fa-icon {
+    transition: opacity 0.1s linear;
+}
+
+.auth-input::after {
+    content: attr(data-placeholder);
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0 5px;
+    color: gray;
+    background-color: white;
+    border: 1px solid;
+    border-radius: 3px;
+    border-color: transparent;
+    cursor: text;
+    font-size: 16px;
+    transition: top 0.25s ease-in, left 0.25s ease-in, color 0.2s ease-in, border-color 0.2s ease-in, font-size 0.25s linear;
+    z-index: 2;
+}
+
+.auth-input.float::after {
+    top: 0px;
+    left: 5px;
+    border-color: var(--gs-accent-blue);
+    color: black;
+    cursor: initial;
+    font-size: 12px;
+}
+
+svg[data-icon="asterisk"],
+svg[data-icon="eye"],
+svg[data-icon="eye-slash"]
+{
+    color: var(--gs-dark-orange);
+}
+
+svg[data-icon="asterisk"] {
+    transition: opacity 0.15s ease-out;
+}

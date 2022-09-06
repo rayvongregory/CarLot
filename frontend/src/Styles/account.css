@@ -1,0 +1,38 @@
+.account-info h3 {
+    /* margin: auto; */
+}
+
+.account-info h3::after {
+    position: absolute;
+    content: "";
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    /* border-radius: 50%; */
+    background-color: var(--black);
+}
+
+.account-info label[for="pfp"] {
+    
+}
+
+
+.pfp {
+    align-items: center;
+}
+
+input#pfp {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .pfp {
+        grid-template-columns: 220px 1fr;
+        grid-template-rows: min-content 40px;
+    }    
+
+    .pfp button {
+        grid-row: 2;
+    }
+  }
