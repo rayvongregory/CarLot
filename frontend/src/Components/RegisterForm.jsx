@@ -3,7 +3,7 @@ import { emailRegex, passwordRegex } from "../Assets/regex"
 import { registerUser } from "../Services/userServices"
 import { InputField } from "./InputField"
 
-export const RegisterForm = () => {
+export const RegisterForm = (props) => {
   const [fname, setFname] = useState("")
   const [lname, setLname] = useState("")
   const [email, setEmail] = useState("")

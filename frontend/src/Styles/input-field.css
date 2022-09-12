@@ -32,14 +32,3 @@ fa-icon {
     cursor: initial;
     font-size: 12px;
 }
-
-svg[data-icon="asterisk"],
-svg[data-icon="eye"],
-svg[data-icon="eye-slash"]
-{
-    color: var(--gs-dark-orange);
-}
-
-svg[data-icon="asterisk"] {
-    transition: opacity 0.15s ease-out;
-}

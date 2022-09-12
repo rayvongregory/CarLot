@@ -51,7 +51,7 @@ export class InputField extends Component {
         >
           <FontAwesomeIcon
             icon={faAsterisk}
-            className={`pointer-events-none absolute right-3 top-1/2 -translate-y-2/4 opacity-1 ${
+            className={`pointer-events-none absolute right-3 top-1/2 -translate-y-2/4 opacity-1 text-gs-dark-orange transition-{opacity} duration-150 ease-out ${
               this.props.required ? "" : "opacity-0"
             }`}
           />
@@ -72,11 +72,14 @@ export class InputField extends Component {
               }`}
             >
               {this.state.see === false ? (
-                <FontAwesomeIcon icon={faEye} className="pointer-events-none" />
+                <FontAwesomeIcon
+                  icon={faEye}
+                  className="pointer-events-none text-gs-dark-orange"
+                />
               ) : (
                 <FontAwesomeIcon
                   icon={faEyeSlash}
-                  className="pointer-events-none"
+                  className="pointer-events-none text-gs-dark-orange"
                 />
               )}
             </button>

@@ -1,5 +1,4 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { library } from "@fortawesome/fontawesome-svg-core"
 import {
   faCar,
   faUser,
@@ -14,7 +13,6 @@ import { getNumRequests } from "../Services/adminService"
 export const Nav = (props) => {
   const [displayWidth, setDisplayWidth] = useState(0)
   const [numNewRequests, setNumNewRequests] = useState(0)
-  library.add(faCar, faUser, faDollarSign, faArrowRightToBracket, faCar)
 
   useEffect(() => {
     window.addEventListener("resize", () => {
@@ -30,8 +28,15 @@ export const Nav = (props) => {
   }, [displayWidth])
 
   useEffect(() => {
-    if (props.role === "admin") setNumNewRequests(getNumRequests())
-  }, [numNewRequests, props.role])
+    async function getNumNewRequests() {
+      const num = await getNumRequests()
+      if (num > 0) {
+        setNumNewRequests(num)
+        return
+      }
+    }
+    if (props.role === "admin") getNumNewRequests()
+  }, [props.role])
 
   return (
     <nav className="fixed left-0 bottom-0 w-full min-h-[60px] max-w-[1500px] flex justify-center items-center flex-wrap gap-y-[10px] m-auto bg-gs-blue  text-white z-10 tablet:relative tablet:bg-white tablet:text-black tablet:z-0 desktop:bg-transparent">
@@ -41,31 +46,31 @@ export const Nav = (props) => {
             <img className="h-[16px]" src="cars.png" alt="cars" />
             <p>Cars</p>
           </Link>
-          {props.userRole !== "guest" ? (
+          {props.role !== "guest" ? (
             <Link to="/list">
-              <FontAwesomeIcon icon="dollar-sign" />
+              <FontAwesomeIcon icon={faDollarSign} />
               <p>Sell</p>
             </Link>
           ) : null}
-          {props.userRole === "admin" ? (
+          {props.role === "admin" ? (
             <Link
-              className="num-requests relative"
+              className={`${numNewRequests > 0 ? "num-requests" : ""} relative`}
               data-num-requests={numNewRequests}
               to="/requests"
             >
-              <FontAwesomeIcon icon="car" />
+              <FontAwesomeIcon icon={faCar} />
               <p>Requests</p>
             </Link>
           ) : null}
-          {props.userRole === "guest" ? (
+          {props.role === "guest" ? (
             <Link to="/login">
-              <FontAwesomeIcon icon="arrow-right-to-bracket" />
+              <FontAwesomeIcon icon={faArrowRightToBracket} />
               <p>Sign In</p>
             </Link>
           ) : null}
-          {props.userRole !== "guest" ? (
+          {props.role !== "guest" ? (
             <Link to="/account">
-              <FontAwesomeIcon icon="user" />
+              <FontAwesomeIcon icon={faUser} />
               <p>Account</p>
             </Link>
           ) : null}
@@ -73,10 +78,10 @@ export const Nav = (props) => {
       ) : (
         <>
           <Link to="/">Cars for sale</Link>
-          {props.userRole !== "guest" ? (
+          {props.role !== "guest" ? (
             <Link to="/list">Sell your car</Link>
           ) : null}
-          {props.userRole === "admin" ? (
+          {props.role === "admin" ? (
             <Link
               className="num-requests relative"
               data-num-requests={numNewRequests}
@@ -85,10 +90,8 @@ export const Nav = (props) => {
               New Requests
             </Link>
           ) : null}
-          {props.userRole === "guest" ? <Link to="/login">Sign in</Link> : null}
-          {props.userRole !== "guest" ? (
-            <Link to="/account">Account</Link>
-          ) : null}
+          {props.role === "guest" ? <Link to="/login">Sign in</Link> : null}
+          {props.role !== "guest" ? <Link to="/account">Account</Link> : null}
         </>
       )}
     </nav>

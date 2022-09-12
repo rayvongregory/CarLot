@@ -1,4 +1,4 @@
-package com.genspark.CarLot.Request;
+package com.genspark.CarLot.Request.AuthRequests;
 
 import lombok.Getter;
 import lombok.ToString;

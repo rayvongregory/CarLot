@@ -1,7 +1,15 @@
 import axios from "axios"
+import { getAccessToken, PATH } from "../Services/constants"
 
-export const getAllCars = () => {
+export const getAllCars = async () => {
   console.log("getting all cars")
+  const accessToken = getAccessToken()
+  await axios
+    .post(`${PATH}/api/get-all-cars`, { accessToken })
+    .then((res) => {})
+    .catch((err) => {
+      console.log(err)
+    })
 }
 
 export const getFilteredResults = (filters) => {
@@ -36,7 +44,7 @@ export const getBasicCarInfo = () => {
   }
 }
 
-export const addCar = (carInfo) => {
+export const listCar = (carInfo) => {
   console.log("adding new car to the lot")
 }
 

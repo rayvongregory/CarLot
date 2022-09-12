@@ -6,7 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @DynamicInsert
@@ -17,7 +20,7 @@ import javax.persistence.*;
 public class User {
     @Id
     @Column(name = "id")
-    private int id;
+    private String id;
     @Column(name = "email", unique = true, nullable = false)
     private String email;
     @Column(name = "fname", nullable = false)
@@ -28,4 +31,8 @@ public class User {
     private String password;
     @Column(name = "role", columnDefinition = "varchar(255) default 'user'")
     private String role;
+    @Column(name = "locked")
+    private boolean locked;
+    @Column(name = "verified")
+    private boolean verified;
 }

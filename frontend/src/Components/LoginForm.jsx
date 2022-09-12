@@ -10,7 +10,7 @@ export const LoginForm = (props) => {
   const [disabled, setDisabled] = useState(true)
   const [requiredEmail, setRequiredEmail] = useState(true)
   const [requiredPassword, setRequiredPassword] = useState(true)
-  const [response, setResponse] = useState("")
+  const [loginMsg, setLoginMsg] = useState("")
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -21,21 +21,23 @@ export const LoginForm = (props) => {
 
   useEffect(() => {
     setTimeout(() => {
-      setResponse("")
+      setLoginMsg("")
     }, 5000)
-  }, [response])
+  }, [loginMsg])
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    const response = await loginUser({ email, password }) // creates an authToken and returns basic user info
-    if (response.err) {
-      setResponse(response.err)
-    }
-    if (response.id) {
-      setResponse("")
-      const { id, fname, lname, role } = response
-      props.setUser({ id, fname, lname, role })
+    const data = await loginUser({ email, password })
+    console.log(data)
+    if (!data) {
+      if (loginMsg) setLoginMsg("")
       navigate("/")
+      return
+    }
+    const { err } = data
+    if (err) {
+      setLoginMsg(err)
+      return
     }
   }
 
@@ -103,7 +105,9 @@ export const LoginForm = (props) => {
             LOG IN
           </button>
         </form>
-        <p className="text-center font-bold text-sm text-red-800">{response}</p>
+        <p className="mt-1 text-center font-bold text-sm text-red-800">
+          {loginMsg}
+        </p>
       </div>
     </div>
   )

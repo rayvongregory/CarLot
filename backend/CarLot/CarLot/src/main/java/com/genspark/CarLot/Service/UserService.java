@@ -1,18 +1,25 @@
 package com.genspark.CarLot.Service;
 
-import com.genspark.CarLot.Request.AuthCookieRequest;
-import com.genspark.CarLot.Request.LoginUserRequest;
-import com.genspark.CarLot.Request.RegisterUserRequest;
+import antlr.Token;
+import com.genspark.CarLot.Request.*;
+import com.genspark.CarLot.Request.AuthRequests.LoginUserRequest;
+import com.genspark.CarLot.Request.AuthRequests.TokenRequest;
+import com.genspark.CarLot.Request.UserRequests.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.HashMap;
 
 public interface UserService {
 
-    public ResponseEntity<HashMap<String, Object>> registerUser(RegisterUserRequest registerUserRequest);
-    public ResponseEntity<HashMap<String, Object>> loginUser(LoginUserRequest loginUserRequest);
-    public ResponseEntity<HashMap<String, Object>> getUserFromCookie(AuthCookieRequest authCookieRequest);
-
+    ResponseEntity<HashMap<String, Object>> registerUser(RegisterUserRequest registerUserRequest);
+    ResponseEntity<HashMap<String, Object>> loginUser(LoginUserRequest loginUserRequest);
+    ResponseEntity<HashMap<String, Object>> getUserInfo(TokenRequest tokenRequest);
+    ResponseEntity<HashMap<String, Object>> updateFname(UpdateFnameRequest updateFnameRequest);
+    ResponseEntity<HashMap<String, Object>> updateLname(UpdateLnameRequest updateLnameRequest);
+    ResponseEntity<HashMap<String, Object>> updateEmail(UpdateEmailRequest updateEmailRequest);
+    ResponseEntity<HashMap<String, Object>> getCloudinaryConfig(TokenRequest tokenRequest);
+    ResponseEntity<HashMap<String, Object>> savePfpRef(PfpRefRequest pfpRefRequest);
+    ResponseEntity<HashMap<String, Object>> deletePfp(TokenRequest tokenRequest) throws IOException;
 }

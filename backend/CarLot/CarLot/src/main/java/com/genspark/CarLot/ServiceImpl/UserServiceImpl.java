@@ -2,18 +2,23 @@ package com.genspark.CarLot.ServiceImpl;
 
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.genspark.CarLot.DAO.UserDAO;
+import com.genspark.CarLot.DAO.UserPfpDAO;
 import com.genspark.CarLot.Entity.User;
-import com.genspark.CarLot.Request.AuthCookieRequest;
-import com.genspark.CarLot.Request.LoginUserRequest;
-import com.genspark.CarLot.Request.RegisterUserRequest;
+import com.genspark.CarLot.Entity.UserPfp;
+import com.genspark.CarLot.Request.*;
+import com.genspark.CarLot.Request.AuthRequests.LoginUserRequest;
+import com.genspark.CarLot.Request.AuthRequests.TokenRequest;
+import com.genspark.CarLot.Request.UserRequests.*;
+import com.genspark.CarLot.Service.TokenService;
 import com.genspark.CarLot.Service.UserService;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.coyote.Response;
+import org.apache.tomcat.util.http.parser.HttpParser;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -21,9 +26,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -31,12 +38,19 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserDAO userDAO;
     @Autowired
+    private TokenService tokenService;
+    @Autowired
+    private UserPfpDAO userPfpDAO;
+    @Autowired
     private Environment env;
     private final String emailRegex = "^(\\D)+(\\w)*((\\.(\\w)+)?)+@(\\D)+(\\w)*((\\.(\\D)+(\\w)*)+)?(\\.)[a-z]{2,}$";
     private final String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$";
     private final String JWT_SECRET = "secret.keys.jwt";
-
-    public UserServiceImpl() {}
+    private final String CLOUD_NAME="secret.name.cloudinary";
+    private final String CLOUD_SECRET="secret.cloudinary";
+    private final String CLOUD_KEY="secret.keys.cloudinary.api";
+    private final String UPLOAD_PRESET="cloudinary.uploadpreset";
+    private final String CLOUDINARY_FOLDER="cloudinary.folder";
 
     @Override
     public ResponseEntity<HashMap<String, Object>> registerUser(RegisterUserRequest registerUserRequest) {
@@ -60,9 +74,12 @@ public class UserServiceImpl implements UserService {
             String fname =registerUserRequest.getFname();
             String lname = registerUserRequest.getLname();
             User user = new User();
+            user.setId(UUID.randomUUID().toString());
             user.setFname(fname);
             user.setLname(lname);
             user.setEmail(email);
+            user.setLocked(false);
+            user.setVerified(true); // set true for now, set to false when email verification is set up
             BasicPasswordEncryptor passwordEncryptor = new BasicPasswordEncryptor();
             user.setPassword(passwordEncryptor.encryptPassword(password));
             userDAO.save(user);
@@ -102,60 +119,147 @@ public class UserServiceImpl implements UserService {
             }});
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>() {{
-                put("id", user.getId());
-                put("fname", user.getFname());
-                put("lname", user.getLname());
-                put("role", user.getRole());
-                put("authToken", getJWT(user.getId(), user.getFname(), user.getLname(), user.getRole()));
+                put("accessToken", generateAccessToken(user.getId(), user.getRole()));
             }});
         }
     }
 
     @Override
-    public ResponseEntity<HashMap<String, Object>> getUserFromCookie(AuthCookieRequest authCookieRequest) {
-        String authCookie = authCookieRequest.getAuthCookie();
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(decodeJWT(authCookie));
-        } catch (JWTVerificationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new HashMap<>() {{
-                put("err", e.getMessage());
-            }});
-        }
+    public ResponseEntity<HashMap<String, Object>> getUserInfo(TokenRequest tokenRequest) {
+        String accessToken = tokenRequest.getAccessToken();
+        String id = JWT.decode(accessToken).getClaim("id").asString();
+        User user = userDAO.findById(id).orElse(null);
+        if(user == null) return null;
+        List<UserPfp> pfpList = userPfpDAO.getPfpByUserId(id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
+            {
+                put("pfp", pfpList.size() == 0 ? "" : pfpList.get(0).getUrl());
+                put("fname", user.getFname());
+                put("lname", user.getLname());
+                put("email", user.getEmail());
+
+            }
+        });
     }
 
-    private String getJWT(int id, String fname, String lname, String role) {
+    @Override
+    public ResponseEntity<HashMap<String, Object>> updateFname(UpdateFnameRequest updateFnameRequest) {
+        String accessToken = updateFnameRequest.getAccessToken();
+        String fname = updateFnameRequest.getFname();
+        String id = JWT.decode(accessToken).getClaim("id").asString();
+        User user = userDAO.findById(id).orElse(null);
+        if(user == null) return null;
+        user.setFname(fname);
+        userDAO.save(user);
+        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){ {
+            put("msg", "First name changed to %s".formatted(fname));
+        }});
+    }
+
+    @Override
+    public ResponseEntity<HashMap<String, Object>> updateLname(UpdateLnameRequest updateLnameRequest) {
+        String accessToken = updateLnameRequest.getAccessToken();
+        String lname = updateLnameRequest.getLname();
+        String id = JWT.decode(accessToken).getClaim("id").asString();
+        User user = userDAO.findById(id).orElse(null);
+        if(user == null) return null;
+        user.setFname(lname);
+        userDAO.save(user);
+        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){ {
+            put("msg", "Last name changed to %s".formatted(lname));
+        }});
+    }
+
+    @Override
+    public ResponseEntity<HashMap<String, Object>> updateEmail(UpdateEmailRequest updateEmailRequest) {
+        String accessToken = updateEmailRequest.getAccessToken();
+        String id = JWT.decode(accessToken).getClaim("id").asString();
+        User user = userDAO.findById(id).orElse(null);
+
+
+
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<HashMap<String, Object>> getCloudinaryConfig(TokenRequest tokenRequest) {
+        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
+            {
+                put("cloudname", env.getProperty(CLOUD_NAME));
+                put("uploadpreset", env.getProperty(UPLOAD_PRESET));
+                put("folder", env.getProperty(CLOUDINARY_FOLDER));
+            }
+        });
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<HashMap<String, Object>> savePfpRef(PfpRefRequest pfpRefRequest) {
+        String accessToken = pfpRefRequest.getAccessToken();
+        String publicId = pfpRefRequest.getPublicId();
+        String url = pfpRefRequest.getUrl();
+        String assetId = pfpRefRequest.getAssetId();
+        String id = JWT.decode(accessToken).getClaim("id").asString();
+        UserPfp userPfp = new UserPfp();
+        userPfp.setUserId(id);
+        userPfp.setPublicId(publicId);
+        userPfp.setUrl(url);
+        userPfp.setAssetId(assetId);
+        userPfpDAO.save(userPfp);
+        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>() {
+            {
+                put("msg", "User pfp ref saved.");
+            }
+        });
+    }
+
+    @Override
+    public ResponseEntity<HashMap<String, Object>> deletePfp(TokenRequest tokenRequest) throws IOException {
+        String accessToken = tokenRequest.getAccessToken();
+        String id = JWT.decode(accessToken).getClaim("id").asString();
+        List<UserPfp> userPfpList = userPfpDAO.getPfpByUserId(id);
+        if(userPfpList.size() > 0) {
+            UserPfp userPfp = userPfpList.get(0);
+            Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+                    "cloud_name", env.getProperty(CLOUD_NAME),
+                    "api_key", env.getProperty(CLOUD_KEY),
+                    "api_secret", env.getProperty(CLOUD_SECRET),
+                    "secure", true));
+            cloudinary.uploader().destroy(userPfp.getPublicId(), new HashMap());
+            userPfpDAO.delete(userPfp);
+            return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
+                {
+                    put("publicId", userPfp.getPublicId());
+                }
+            });
+        } else
+        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
+            {
+                put("msg", "User had no previous pfp");
+            }
+        });
+    }
+
+    private String generateAccessToken(String id, String role) {
+        // the access token and refresh token both hold the user id, role, and refresh token key
+        // whenever the access token needs to be verified, simply check that the access token sent with the request matches the access token claim in the refresh token
+        // once verified, use the user id claim to proceed with fulfilling the request
         try {
             Algorithm algorithm = Algorithm.HMAC256(Objects.requireNonNull(env.getProperty(JWT_SECRET)));
-            return JWT.create()
-                    .withIssuer("auth0")
+            String rtk = RandomStringUtils.randomAlphabetic(20);  // refresh token key
+            String accessToken = JWT.create()
                     .withClaim("id", id)
-                    .withClaim("fname", fname)
-                    .withClaim("lname", lname)
                     .withClaim("role", role)
-                    .withIssuedAt(LocalDateTime.now().toInstant(ZoneOffset.UTC))
-                    .withExpiresAt(LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.UTC))
+                    .withClaim("rtk", rtk)
+                    .withIssuer("auth0")
+                    .withIssuedAt(Instant.now())
+                    .withExpiresAt(Instant.now().plusSeconds(60 * 15)) // 60 * 15
                     .sign(algorithm);
+            tokenService.addRefreshToken(rtk, algorithm);
+            return accessToken;
         } catch (JWTCreationException exception) {
             return null;
         }
-    }
-
-    private HashMap<String, Object> decodeJWT(String authCookie) throws IllegalArgumentException, JWTVerificationException {
-        HashMap<String, Object> userInfo = new HashMap<>();
-        Algorithm algorithm = Algorithm.HMAC256(Objects.requireNonNull(env.getProperty(JWT_SECRET)));
-        JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
-        DecodedJWT jwt = verifier.verify(authCookie);
-        for (Map.Entry<String, Claim> claim : jwt.getClaims().entrySet()) {
-            String key = claim.getKey();
-            if(key.equals("iss") || key.equals("exp") || key.equals("iat")) continue;
-            String value = claim.getValue().toString();
-            try {
-                int num = Integer.parseInt(value);
-                userInfo.put(key, num);
-            } catch (NumberFormatException e) {
-                userInfo.put(key, claim.getValue().asString());
-            }
-        }
-        return userInfo;
     }
 }
