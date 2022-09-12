@@ -10,15 +10,16 @@ import com.genspark.CarLot.DAO.UserDAO;
 import com.genspark.CarLot.DAO.UserPfpDAO;
 import com.genspark.CarLot.Entity.User;
 import com.genspark.CarLot.Entity.UserPfp;
-import com.genspark.CarLot.Request.*;
 import com.genspark.CarLot.Request.AuthRequests.LoginUserRequest;
 import com.genspark.CarLot.Request.AuthRequests.TokenRequest;
-import com.genspark.CarLot.Request.UserRequests.*;
+import com.genspark.CarLot.Request.RegisterUserRequest;
+import com.genspark.CarLot.Request.UserRequests.PfpRefRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateEmailRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateFnameRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateLnameRequest;
 import com.genspark.CarLot.Service.TokenService;
 import com.genspark.CarLot.Service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.coyote.Response;
-import org.apache.tomcat.util.http.parser.HttpParser;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -27,11 +28,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -226,19 +229,20 @@ public class UserServiceImpl implements UserService {
                     "api_key", env.getProperty(CLOUD_KEY),
                     "api_secret", env.getProperty(CLOUD_SECRET),
                     "secure", true));
-            cloudinary.uploader().destroy(userPfp.getPublicId(), new HashMap());
+            cloudinary.uploader().destroy(userPfp.getPublicId(), new HashMap<String,Object>());
             userPfpDAO.delete(userPfp);
             return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
                 {
                     put("publicId", userPfp.getPublicId());
                 }
             });
-        } else
-        return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
-            {
-                put("msg", "User had no previous pfp");
-            }
-        });
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){
+                {
+                    put("msg", "User had no previous pfp");
+                }
+            });
+        }
     }
 
     private String generateAccessToken(String id, String role) {

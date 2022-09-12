@@ -15,7 +15,7 @@ import javax.persistence.*;
 public class Car {
 
     public enum Status {
-        UNDER_REVIEW, REJECTED, LISTED;
+        UNDER_REVIEW, REJECTED, LISTED
     }
 
     @Id

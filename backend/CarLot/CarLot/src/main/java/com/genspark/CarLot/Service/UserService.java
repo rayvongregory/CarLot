@@ -1,12 +1,13 @@
 package com.genspark.CarLot.Service;
 
-import antlr.Token;
-import com.genspark.CarLot.Request.*;
 import com.genspark.CarLot.Request.AuthRequests.LoginUserRequest;
 import com.genspark.CarLot.Request.AuthRequests.TokenRequest;
-import com.genspark.CarLot.Request.UserRequests.*;
+import com.genspark.CarLot.Request.RegisterUserRequest;
+import com.genspark.CarLot.Request.UserRequests.PfpRefRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateEmailRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateFnameRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateLnameRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
 import java.util.HashMap;

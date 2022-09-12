@@ -1,21 +1,17 @@
 package com.genspark.CarLot.Controller;
 
 import com.genspark.CarLot.Request.AuthRequests.TokenRequest;
-import com.genspark.CarLot.Request.UserRequests.*;
+import com.genspark.CarLot.Request.UserRequests.PfpRefRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateEmailRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateFnameRequest;
+import com.genspark.CarLot.Request.UserRequests.UpdateLnameRequest;
 import com.genspark.CarLot.Service.UserService;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
-import java.util.Scanner;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")

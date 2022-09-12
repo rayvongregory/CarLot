@@ -2,7 +2,6 @@ package com.genspark.CarLot.Controller;
 
 import com.genspark.CarLot.Request.AdminRequests.NumNewRequestsRequest;
 import com.genspark.CarLot.Service.AdminService;
-import com.genspark.CarLot.Service.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
